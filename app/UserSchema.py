@@ -8,7 +8,7 @@ def generate_user_id() -> str:
 
 class User(BaseModel):
     user_id: str = Field(default_factory=generate_user_id)
-    username: constr(min_length=3, max_length=12)
+    username: constr(min_length=3, max_length=18)
     password: constr(min_length=5, max_length=12)
     passport_type: str
     firstname: constr(min_length=2, max_length=50)
