@@ -1,5 +1,5 @@
 # app/schemas.py
-from pydantic import BaseModel, EmailStr, constr, conint
+from pydantic import BaseModel, EmailStr, constr, conint, Field
 import random
 
 def generate_user_id() -> str:
@@ -8,9 +8,12 @@ def generate_user_id() -> str:
 
 class User(BaseModel):
     user_id: str = Field(default_factory=generate_user_id)
+    username: constr(min_length=3, max_length=12)
     password: constr(min_length=5, max_length=12)
-    passport_type: constr(pattern=r"^S\d{7}$")
-    name: constr(min_length=2, max_length=50)
+    passport_type: str
+    firstname: constr(min_length=2, max_length=50)
+    lastname: constr(min_length=2, max_length=50)
     email: EmailStr
     age: conint(gt=18)
-    number: conint(min_length=10)
+    number: constr(min_length=10, max_length=10)
+    #0852012545
