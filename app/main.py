@@ -12,7 +12,7 @@ def get_users():
 
 #Gets all users using their id
 @app.get("/api/users/{user_id}")
-def get_user(user_id: int):
+def get_user(user_id: str):
     for u in users:
         if u.user_id == user_id:
             return u
@@ -21,7 +21,8 @@ def get_user(user_id: int):
 #Creates new users and shows an error if user already exists
 @app.post("/api/users", status_code=status.HTTP_201_CREATED)
 def add_user(user: User):
-    user.user_id = generate_user_id() #call the function to generate the user id
+    if not user.user_id:# Only generate an ID if not already provided
+     user.user_id = generate_user_id() #call the function to generate the user id
     if any(u.user_id == user.user_id for u in users):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="user_id already exists")
     users.append(user)
@@ -29,19 +30,20 @@ def add_user(user: User):
 
 #Updates users and shows an error if user already exists
 @app.put("/api/users/{username}")
-def update_user(username: int, updated_user: User):
+def update_user(username: str, updated_user: User):
     for i, u in enumerate(users):
         if u.username == username:
             users[i] = updated_user
             return updated_user
-        raise HTTPException(
+
+    raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="User not found"
     )
 
 #Deletes users and shows an error if user id is not found
 @app.delete("/api/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int):
+def delete_user(user_id: str): #changing from int to string as our user id is now a string not an int, causing test fails
     for u in users:
         if u.user_id == user_id:
             users.remove(u)
