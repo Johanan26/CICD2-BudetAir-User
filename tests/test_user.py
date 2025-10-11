@@ -16,7 +16,7 @@ def test_create_user_ok(client):
 def test_user_id_generated(client):
  r1 = client.post("/api/users", json=user_payload(username="Sean"))
  r2 = client.post("/api/users", json=user_payload(username="Mary"))
- assert r1.status_code == 201
+ assert r1.status_code == 201 #201 = created successful
  assert r2.status_code == 201
  assert r1.json()["user_id"] != r2.json()["user_id"]
 
@@ -25,7 +25,6 @@ def test_duplicate_user_id_conflict(client):
  r1 = client.post("/api/users", json=user_payload(username="ava"))
  assert r1.status_code == 201
  existing_id = r1.json()["user_id"]
-
  payload = user_payload(username="liam")
  payload["user_id"] = existing_id  # Force duplicate
  r2 = client.post("/api/users", json=payload)
@@ -48,7 +47,7 @@ def test_duplicate_user_id_conflict(client):
 def test_get_user_404(client):
  r = client.get("/api/users/999")
  # pydantic validation error
- assert r.status_code == 404 
+ assert r.status_code == 404 #404 = Not found
 
 #testing to see if user can be deleted
 def test_delete_then_404(client):
@@ -56,7 +55,7 @@ def test_delete_then_404(client):
  user_id = r1.json()["user_id"]
 
  r2 = client.delete(f"api/users/{user_id}")
- assert r2.status_code == 204
+ assert r2.status_code == 204 #204 = no content
 
  r3 = client.delete(f"/api/users/{user_id}")
  assert r3.status_code == 404
@@ -66,20 +65,12 @@ def test_update_then_404(client):
  # Create a new user
  r1 = client.post("/api/users", json=user_payload(username="Sean"))
  user_data = r1.json() #instead of just checking user id we will check user data, so the full response, only way I can get it to work without it breaking
- #it's converting the response we get into the python dictionary, it contains all the data that got returned from the response 
+ # it's converting the response we get into the python dictionary, it contains all the data that got returned from the response 
  # Create updated user payload
  update_payload = user_payload(username="UpdatedSean")
  #line below takes the username field form the original response (user_data['username'])
  #then the update payload sends back the updated user details
  r2 = client.put(f"/api/users/{user_data['username']}", json=update_payload)
- assert r2.status_code == 200
+ assert r2.status_code == 200 #request succesful
  r3 = client.put("/api/users/BA999999", json=user_payload())
  assert r3.status_code == 404
-
-
-#FOR JO
-#THIS TOOK ME AN HOUR AND A HALF BE HAPPY
-#ITS A LOT OF CONFUSING CODE, I'VE COOMMENTED WHAT I'VE CHANGED FROM ORIGIANL TO MAKE IT WORK
-#I'VE EXPLAINED TO THE BEST OF MY ABILITY AND MY UNDERSTANDING,
-#A LOT OF THE STUFF WAS JUST CHANGING VALUES FROM INTS TO STRINGS OR FROM USER ID TO USERNAME
-#WILL TELL YOU MORE TOMMOROW IF I CAN
