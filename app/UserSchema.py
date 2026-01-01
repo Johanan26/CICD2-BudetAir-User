@@ -21,18 +21,6 @@ email = Annotated[EmailStr, StringConstraints(max_length=100)]
 age=Annotated[int, Ge(0), Le(150)]
 number=Annotated[str, StringConstraints(min_length=10, max_length=10)]
 
-#class User(BaseModel):
-   # user_id: str = Field(default_factory=generate_user_id)
-   # username: constr(min_length=3, max_length=18)
-    #password: constr(min_length=5, max_length=12)
-    #passport_type: str
-    #firstname: constr(min_length=2, max_length=50)
-    #lastname: constr(min_length=2, max_length=50)
-    #email: EmailStr
-   # age: conint(gt=18)
-   # number: constr(min_length=10, max_length=10)
-    #0852012545 
-
 #--------Users----------
 
 class User(BaseModel):
