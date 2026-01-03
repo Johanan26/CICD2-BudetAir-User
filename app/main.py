@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from .Userdb import engine, SessionLocal
 from .Usermodels import Base, UserDB, PasswordHash
-from .UserSchema import User, UserPublic, generate_user_id
+from .UserSchema import User, UserPublic, UserLogin, UserRole, UserRoleUpdate, generate_user_id
 
 app = FastAPI()
 
@@ -46,6 +46,9 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
 #Creates new users and shows an error if user already exists
 @app.post("/api/users", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def add_user(user: User, db: Session = Depends(get_db)):
+    # Default to regular_user if role not provided
+    user_role = user.role if user.role else UserRole.REGULAR_USER
+    
     new_user = UserDB(
         firstname=user.firstname,
         lastname=user.lastname,
@@ -54,6 +57,7 @@ def add_user(user: User, db: Session = Depends(get_db)):
         email=user.email,
         age=user.age,
         number=user.number,
+        role=user_role,
         user_id=generate_user_id()
     )
 
@@ -79,6 +83,7 @@ def update_user(username: str, updated_user: User, db: Session = Depends(get_db)
     user.email = updated_user.email
     user.age = updated_user.age
     user.number = updated_user.number
+    user.role = updated_user.role if updated_user.role else UserRole.REGULAR_USER
 
     commit_or_rollback(db, "Could not create user due to database conflict")
     db.refresh(user)
@@ -96,3 +101,30 @@ def delete_user(username: str, db: Session = Depends(get_db)) -> Response:
     db.delete(user) # <-- triggers cascade="all, delete-orphan" on projects
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# Update user role (PATCH endpoint for role updates)
+@app.patch("/api/users/{username}/role", response_model=UserPublic)
+def update_user_role(username: str, role_update: UserRoleUpdate, db: Session = Depends(get_db)):
+    user = db.query(UserDB).filter(UserDB.username == username).first()
+    
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    user.role = role_update.role
+    commit_or_rollback(db, "Could not update user role due to database conflict")
+    db.refresh(user)
+    
+    return user
+
+# Login endpoint
+@app.post("/api/users/login", response_model=UserPublic)
+def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(UserDB).filter(UserDB.username == credentials.username).first()
+    
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    
+    if user.password != credentials.password:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    
+    return user
