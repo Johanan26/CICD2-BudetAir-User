@@ -1,4 +1,3 @@
-# app/main.py
 from fastapi import FastAPI, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -27,13 +26,11 @@ def commit_or_rollback(db: Session, error_msg: str):
         raise HTTPException(status_code=409, detail=error_msg)
 
 
-#Get all the users
 @app.get("/api/users", response_model=list[UserPublic])
 def get_users(db: Session = Depends(get_db)):
     users = db.query(UserDB).all()
     return users
 
-# Login endpoint - MUST be before /api/users/{user_id} to avoid route conflict
 @app.post("/api/users/login", response_model=UserPublic)
 def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.username == credentials.username).first()
@@ -44,9 +41,9 @@ def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
     if user.password != credentials.password:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     
+    print("user", user, "user_id", user.user_id)
     return user
 
-#Gets all users using their id
 @app.get("/api/users/{user_id}",response_model=UserPublic)
 def get_user(user_id: str, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.user_id == user_id).first()
@@ -56,10 +53,8 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     
     return user
 
-#Creates new users and shows an error if user already exists
 @app.post("/api/users", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def add_user(user: User, db: Session = Depends(get_db)):
-    # Default to regular_user if role not provided
     user_role = user.role if user.role else UserRole.REGULAR_USER
     
     new_user = UserDB(
@@ -81,7 +76,6 @@ def add_user(user: User, db: Session = Depends(get_db)):
 
     return new_user
 
-#Updates users and shows an error if user already exists
 @app.put("/api/users/{username}", response_model=UserPublic)
 def update_user(username: str, updated_user: User, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.username == username).first()
@@ -103,7 +97,6 @@ def update_user(username: str, updated_user: User, db: Session = Depends(get_db)
 
     return user
 
-# DELETE a user (triggers ORM cascade -> deletes their projects too)
 @app.delete("/api/users/{username}", status_code=204)
 def delete_user(username: str, db: Session = Depends(get_db)) -> Response:
     user = db.query(UserDB).filter(UserDB.username == username).first()
@@ -111,11 +104,10 @@ def delete_user(username: str, db: Session = Depends(get_db)) -> Response:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    db.delete(user) # <-- triggers cascade="all, delete-orphan" on projects
+    db.delete(user)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-# Update user role (PATCH endpoint for role updates)
 @app.patch("/api/users/{username}/role", response_model=UserPublic)
 def update_user_role(username: str, role_update: UserRoleUpdate, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.username == username).first()

@@ -21,12 +21,10 @@ email = Annotated[EmailStr, StringConstraints(max_length=100)]
 age=Annotated[int, Ge(0), Le(150)]
 number=Annotated[str, StringConstraints(min_length=10, max_length=10)]
 
-#--------Roles----------
 class UserRole(str, Enum):
     ADMIN = "admin"
     REGULAR_USER = "regular_user"
 
-#--------Users----------
 
 class User(BaseModel):
     firstname: firstname
@@ -39,6 +37,7 @@ class User(BaseModel):
     role: Optional[UserRole] = Field(default=UserRole.REGULAR_USER, description="User role, defaults to regular_user")
 
 class UserPublic(BaseModel):
+    user_id: str
     firstname: str
     lastname: str
     username: str
