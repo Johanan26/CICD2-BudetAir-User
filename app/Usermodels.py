@@ -1,7 +1,8 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, Integer, Text, TypeDecorator, Enum as SqlEnum
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, Text, TypeDecorator, Enum as SqlEnum, ForeignKey, DateTime
 from sqlalchemy.orm import validates
-from typing import Union
+from typing import Union, Optional
+from datetime import datetime
 import bcrypt
 from .UserSchema import UserRole
 
