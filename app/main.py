@@ -33,6 +33,19 @@ def get_users(db: Session = Depends(get_db)):
     users = db.query(UserDB).all()
     return users
 
+# Login endpoint - MUST be before /api/users/{user_id} to avoid route conflict
+@app.post("/api/users/login", response_model=UserPublic)
+def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(UserDB).filter(UserDB.username == credentials.username).first()
+    
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    
+    if user.password != credentials.password:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    
+    return user
+
 #Gets all users using their id
 @app.get("/api/users/{user_id}",response_model=UserPublic)
 def get_user(user_id: str, db: Session = Depends(get_db)):
@@ -113,18 +126,5 @@ def update_user_role(username: str, role_update: UserRoleUpdate, db: Session = D
     user.role = role_update.role
     commit_or_rollback(db, "Could not update user role due to database conflict")
     db.refresh(user)
-    
-    return user
-
-# Login endpoint
-@app.post("/api/users/login", response_model=UserPublic)
-def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(UserDB).filter(UserDB.username == credentials.username).first()
-    
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
-    
-    if user.password != credentials.password:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     
     return user
