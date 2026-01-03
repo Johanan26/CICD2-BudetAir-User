@@ -1,13 +1,12 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, Integer, Text, TypeDecorator
+from sqlalchemy import String, Integer, Text, TypeDecorator, Enum as SqlEnum
 from sqlalchemy.orm import validates
 from typing import Union
 import bcrypt
+from .UserSchema import UserRole
 
 class Base(DeclarativeBase):
  pass
-
-import bcrypt
 
 class PasswordHash:
     def __init__(self, hash_: bytes | str):
@@ -73,6 +72,7 @@ class UserDB(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     age: Mapped[int] = mapped_column(Integer, nullable=False)
     number: Mapped[str] = mapped_column(String, nullable=False)
+    role: Mapped[UserRole] = mapped_column(SqlEnum(UserRole), default=UserRole.REGULAR_USER, nullable=False)
 
     model_config = {
         "from_attributes": True

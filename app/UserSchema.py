@@ -1,8 +1,8 @@
 # app/schemas.py
-from typing import Annotated
+from typing import Annotated, Optional
 from annotated_types import Ge, Le
-from pydantic import BaseModel, EmailStr, StringConstraints
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, StringConstraints, Field
+from enum import Enum
 from uuid import uuid4
 
 def generate_user_id() -> str:
@@ -21,6 +21,11 @@ email = Annotated[EmailStr, StringConstraints(max_length=100)]
 age=Annotated[int, Ge(0), Le(150)]
 number=Annotated[str, StringConstraints(min_length=10, max_length=10)]
 
+#--------Roles----------
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    REGULAR_USER = "regular_user"
+
 #--------Users----------
 
 class User(BaseModel):
@@ -31,15 +36,23 @@ class User(BaseModel):
     email: email
     age: age
     number: number
+    role: Optional[UserRole] = Field(default=UserRole.REGULAR_USER, description="User role, defaults to regular_user")
 
 class UserPublic(BaseModel):
-    user_id: str
     firstname: str
     lastname: str
     username: str
     email: EmailStr
     age: int
     number: str
+    role: UserRole
 
     class Config:
         orm_mode = True
+
+class UserLogin(BaseModel):
+    username: username
+    password: password
+
+class UserRoleUpdate(BaseModel):
+    role: UserRole
